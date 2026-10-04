@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Exemplar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">biblioteca</a> &gt; <a href="index.source.html" class="el_package">model</a> &gt; <span class="el_source">Exemplar.java</span></div><h1>Exemplar.java</h1><pre class="source lang-java linenums">package model;
+
+public class Exemplar {
+    private String titulo;
+    private String isbn;
+    private TipoMaterial tipo;
+    private boolean disponivel;
+
+<span class="nc" id="L9">    public Exemplar(String titulo, String isbn, TipoMaterial tipo) {</span>
+<span class="nc" id="L10">        this.titulo = titulo;</span>
+<span class="nc" id="L11">        this.isbn = isbn;</span>
+<span class="nc" id="L12">        this.tipo = tipo;</span>
+<span class="nc" id="L13">        this.disponivel = true;</span>
+<span class="nc" id="L14">    }</span>
+
+<span class="nc" id="L16">    public String getTitulo() { return titulo; }</span>
+<span class="nc" id="L17">    public String getIsbn() { return isbn; }</span>
+<span class="nc" id="L18">    public TipoMaterial getTipo() { return tipo; }</span>
+<span class="nc" id="L19">    public boolean isDisponivel() { return disponivel; }</span>
+<span class="nc" id="L20">    public void setDisponivel(boolean disponivel) { this.disponivel = disponivel; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

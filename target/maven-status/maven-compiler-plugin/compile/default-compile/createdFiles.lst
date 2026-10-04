@@ -1,0 +1,10 @@
+view/SistemaBibliotecaCLI.class
+model/TipoVinculo.class
+model/Usuario.class
+controller/ControleBiblioteca.class
+model/TipoMaterial.class
+model/Aluno.class
+model/Professor.class
+model/Exemplar.class
+model/BibliotecaService.class
+model/Emprestimo.class
