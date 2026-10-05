@@ -22,7 +22,7 @@ Este guia leva você do zero (nada instalado) até:
 3. [Pré-requisitos e instalação](#3-pré-requisitos-e-instalação)
 4. [Baixando o projeto](#4-baixando-o-projeto)
 5. [Compilando o projeto](#5-compilando-o-projeto)
-6. [Executando o programa](#6-executando-o-programa)
+6. [Executando o programa](#6-executando-o-programa) (terminal e [versão web/HTTP](#61-executando-a-versão-web-http))
 7. [Executando os testes (JUnit)](#7-executando-os-testes-junit)
 8. [Relatório de cobertura (JaCoCo)](#8-relatório-de-cobertura-jacoco)
 9. [Usando uma IDE](#9-usando-uma-ide)
@@ -100,7 +100,8 @@ Biblioteca/
 │   │   ├── controller/
 │   │   │   └── ControleBiblioteca.java #   intermedia View ↔ Model
 │   │   └── view/
-│   │       └── SistemaBibliotecaCLI.java # menu no terminal e método main
+│   │       ├── SistemaBibliotecaCLI.java  # view 1: menu no terminal (main)
+│   │       └── SistemaBibliotecaHTTP.java # view 2: páginas web via servidor do JDK (main)
 │   └── test/java/                  # testes automatizados
 │       ├── SmokeTest.java              (teste mínimo: confirma que o JUnit funciona)
 │       └── model/
@@ -292,6 +293,65 @@ Experimente também os casos de erro:
 
 Compare o recibo da matrícula `111` (aluno) com o da `222` (professora titular)
 para o mesmo tipo de material: o prazo da professora é maior.
+
+### 6.1 Executando a versão web (HTTP)
+
+O projeto tem uma **segunda view**, `view.SistemaBibliotecaHTTP`, que oferece as mesmas
+funções pelo navegador. Ela usa o servidor HTTP que já vem no JDK
+(`com.sun.net.httpserver`), então **não exige nenhuma instalação ou dependência extra**.
+O Model e o Controller são exatamente os mesmos da versão de terminal — só a View muda,
+que é justamente a vantagem do padrão MVC.
+
+Compile (seção 5) e inicie o servidor:
+
+```bash
+java -cp target/classes view.SistemaBibliotecaHTTP
+```
+
+Saída esperada:
+
+```
+Servidor em http://localhost:8080/  (Ctrl+C para encerrar)
+```
+
+Agora abra <http://localhost:8080/> no navegador:
+
+1. A página mostra a tabela do **acervo** com o status de cada exemplar.
+2. No formulário **Novo Empréstimo**, informe a matrícula (`111` ou `222`) e o ISBN
+   (`978-01`, `978-02` ou `978-03`) e clique em *Emprestar*.
+3. O recibo é exibido na tela. Use o link *Voltar* e veja o exemplar como **Emprestado**.
+4. Tente emprestar o mesmo exemplar de novo, ou usar uma matrícula inexistente: a página
+   mostra a mesma mensagem de erro da versão de terminal.
+
+Para encerrar o servidor, volte ao terminal e pressione **Ctrl+C**.
+
+**Usar outra porta** (por exemplo, se a 8080 estiver ocupada):
+
+```bash
+java -cp target/classes view.SistemaBibliotecaHTTP 9000
+```
+
+e acesse <http://localhost:9000/>.
+
+**Também dá para testar pelo terminal**, sem navegador, usando o `curl`:
+
+```bash
+# ver a página do acervo
+curl http://localhost:8080/
+
+# fazer um empréstimo (formulário via POST)
+curl -d "matricula=222&isbn=978-02" http://localhost:8080/emprestimo
+```
+
+Observações:
+
+- Os dados ficam **em memória no servidor**: ao encerrá-lo (Ctrl+C), tudo volta ao estado inicial.
+- O servidor só atende o seu computador no endereço `localhost`; ele é apenas um exemplo
+  didático, sem autenticação ou persistência.
+- Se aparecer `Address already in use`, outra aplicação está usando a porta — escolha outra
+  (veja acima) ou encerre a que está rodando.
+- Na IDE, basta clicar no ▶ ao lado do `main` de `SistemaBibliotecaHTTP.java`
+  (para mudar a porta, informe-a em *Program arguments* na configuração de execução).
 
 ---
 
@@ -585,6 +645,7 @@ Você está na pasta errada. Use `cd` até a pasta onde está o `pom.xml`
 
 - Execute `mvn compile` antes.
 - Execute o `java -cp target/classes ...` **a partir da pasta do `pom.xml`**.
+- Para a versão web, o nome é `view.SistemaBibliotecaHTTP`.
 - Escreva o nome exatamente como está, incluindo maiúsculas: `view.SistemaBibliotecaCLI`.
 
 ### Caracteres estranhos (`EmprÃ©stimo`) no terminal

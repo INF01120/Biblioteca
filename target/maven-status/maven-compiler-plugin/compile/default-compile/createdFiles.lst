@@ -6,5 +6,6 @@ model/TipoMaterial.class
 model/Aluno.class
 model/Professor.class
 model/Exemplar.class
+view/SistemaBibliotecaHTTP.class
 model/BibliotecaService.class
 model/Emprestimo.class
