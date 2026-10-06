@@ -1,11 +1,5 @@
 package view;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
-import controller.ControleBiblioteca;
-import model.Emprestimo;
-import model.Exemplar;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -13,6 +7,13 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+
+import controller.ControleBiblioteca;
+import model.Emprestimo;
+import model.Exemplar;
 
 /**
  * View alternativa: mesma regra de negócio (Controller/Model), mas servida
@@ -48,45 +49,134 @@ public class SistemaBibliotecaHTTP {
         Map<String, String> campos = lerFormulario(ex);
         String corpo;
         int status = 200;
+        
         try {
             Emprestimo emp = controller.realizarEmprestimo(
-                    campos.getOrDefault("matricula", ""), campos.getOrDefault("isbn", ""));
-            corpo = "<pre>" + escapar(emp.gerarRecibo()) + "</pre>";
+                    campos.getOrDefault("matricula", ""), 
+                    campos.getOrDefault("isbn", "")
+            );
+            corpo = """
+                <h2>✅ Sucesso!</h2>
+                <div class="recibo">%s</div>
+                """.formatted(escapar(emp.gerarRecibo()));
         } catch (Exception e) {
             status = 400;
-            corpo = "<p class=\"erro\">ERRO NA OPERAÇÃO: " + escapar(e.getMessage()) + "</p>";
+            corpo = """
+                <h2>⚠️ Atenção</h2>
+                <div class="erro"><strong>ERRO NA OPERAÇÃO:</strong> %s</div>
+                """.formatted(escapar(e.getMessage()));
         }
-        responder(ex, status, pagina("Empréstimo", corpo + "<p><a href=\"/\">Voltar</a></p>"));
+        
+        String htmlFinal = corpo + """
+            <br><br>
+            <a class="btn" href="/">← Voltar ao Início</a>
+            """;
+            
+        responder(ex, status, pagina("Resultado do Empréstimo", htmlFinal));
     }
 
     private String montarAcervo() {
-        StringBuilder sb = new StringBuilder("<h2>Acervo</h2><table><tr><th>ISBN</th><th>Título</th><th>Categoria</th><th>Status</th></tr>");
+        StringBuilder sb = new StringBuilder("""
+            <h2>📚 Acervo da Biblioteca</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ISBN</th>
+                        <th>Título</th>
+                        <th>Categoria</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """);
+            
         for (Exemplar e : controller.getAcervo()) {
-            sb.append("<tr><td>").append(escapar(e.getIsbn()))
-              .append("</td><td>").append(escapar(e.getTitulo()))
-              .append("</td><td>").append(e.getTipo())
-              .append("</td><td>").append(e.isDisponivel() ? "Disponível" : "Emprestado")
-              .append("</td></tr>");
+            String badgeClass = e.isDisponivel() ? "badge disp" : "badge emp";
+            String statusText = e.isDisponivel() ? "Disponível" : "Emprestado";
+            
+            String linha = """
+                <tr>
+                    <td>%s</td>
+                    <td><strong>%s</strong></td>
+                    <td>%s</td>
+                    <td><span class="%s">%s</span></td>
+                </tr>
+                """.formatted(
+                    escapar(e.getIsbn()), 
+                    escapar(e.getTitulo()), 
+                    e.getTipo(), 
+                    badgeClass, 
+                    statusText
+                );
+            sb.append(linha);
         }
-        return sb.append("</table>").toString();
+        
+        sb.append("""
+                </tbody>
+            </table>
+            """);
+        return sb.toString();
     }
 
     private String formulario() {
-        return "<h2>Novo Empréstimo</h2>"
-             + "<form method=\"post\" action=\"/emprestimo\">"
-             + "<label>Matrícula (ex: 111 ou 222) <input name=\"matricula\" required></label>"
-             + "<label>ISBN (ex: 978-01) <input name=\"isbn\" required></label>"
-             + "<button>Emprestar</button></form>";
+        return """
+            <h2>🔄 Novo Empréstimo</h2>
+            <div class="card">
+                <form method="post" action="/emprestimo">
+                    <div>
+                        <label>Matrícula do Aluno</label>
+                        <input name="matricula" placeholder="Ex: 111 ou 222" required>
+                    </div>
+                    <div>
+                        <label>Código ISBN</label>
+                        <input name="isbn" placeholder="Ex: 978-01" required>
+                    </div>
+                    <button type="submit">Confirmar Empréstimo</button>
+                </form>
+            </div>
+            """;
     }
 
     private String pagina(String titulo, String conteudo) {
-        return "<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\">"
-             + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-             + "<title>" + escapar(titulo) + "</title><style>"
-             + "body{font-family:sans-serif;max-width:40rem;margin:2rem auto;padding:0 1rem}"
-             + "table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:.4rem;text-align:left}"
-             + "label{display:block;margin:.5rem 0}.erro{color:#b00020}</style></head><body>"
-             + "<h1>" + escapar(titulo) + "</h1>" + conteudo + "</body></html>";
+        String template = """
+            <!doctype html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1">
+                <title>%s</title>
+                <style>
+                    :root { --primary: #2563eb; --bg: #f8fafc; --surface: #ffffff; --text: #1e293b; --border: #e2e8f0; }
+                    body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); max-width: 800px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
+                    h1 { color: var(--primary); text-align: center; margin-bottom: 2rem; font-size: 2.5rem; }
+                    h2 { border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; margin-top: 2rem; color: #334155; }
+                    .card { background: var(--surface); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-top: 1rem; }
+                    table { border-collapse: collapse; width: 100%%; background: var(--surface); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); }
+                    thead { background-color: var(--primary); color: white; }
+                    th, td { padding: 1rem; border-bottom: 1px solid var(--border); text-align: left; }
+                    tr:last-child td { border-bottom: none; }
+                    tbody tr:hover { background-color: #f1f5f9; }
+                    form { display: flex; flex-direction: column; gap: 1.2rem; }
+                    label { font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 0.3rem; }
+                    input { padding: 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; width: 100%%; box-sizing: border-box; transition: border-color 0.2s; }
+                    input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+                    button, .btn { background-color: var(--primary); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-block; text-align: center; }
+                    button:hover, .btn:hover { background-color: #1d4ed8; }
+                    .erro { background-color: #fef2f2; color: #991b1b; padding: 1rem; border-left: 4px solid #ef4444; border-radius: 6px; margin-bottom: 1rem; }
+                    .recibo { background-color: #f0fdf4; color: #166534; padding: 1rem; border-left: 4px solid #22c55e; border-radius: 6px; font-family: monospace; white-space: pre-wrap; font-size: 1.1rem; }
+                    .badge { padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; }
+                    .badge.disp { background: #dcfce7; color: #166534; }
+                    .badge.emp { background: #fee2e2; color: #991b1b; }
+                </style>
+            </head>
+            <body>
+                <h1>%s</h1>
+                %s
+            </body>
+            </html>
+            """;
+            
+        return template.formatted(escapar(titulo), escapar(titulo), conteudo);
     }
 
     private Map<String, String> lerFormulario(HttpExchange ex) throws IOException {
